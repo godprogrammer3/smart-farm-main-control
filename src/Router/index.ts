@@ -7,11 +7,32 @@ router.get("/",(req: Request, res : Response) => {
 });
 router.post("/addNode",async (req: Request, res: Response) => {
     try{
-        console.log(req.body);
-        await localDB.addControlNode(req.body.macAddress,req.body.typeId,req.body.farmId);
-        res.status(200).send('Add node success');
+        if( req.body.nodeType == 'control_node'){
+            await localDB.addControlNode(req.body.macAddress,req.body.typeId);
+            res.status(200).send('Add control node success');
+        }else{
+            await localDB.addSensorNode(req.body.macAddress,req.body.typeId);
+            res.status(200).send('Add sensor node success');
+        }
+       
     }catch(err){
         console.log(err);
+        res.status(500).send("Error :"+err);
+    }
+});
+
+router.post("/addNodeConfig",async (req: Request, res: Response) => {
+    try{
+        if( req.body.nodeType == 'control_node'){
+            await localDB.addControlNodeConfig(req.body.macAddress,req.body.logInterval);
+            res.status(200).send('Add control node config success');
+        }else{
+            await localDB.addSensorNodeConfig(req.body.macAddress,req.body.logInterval);
+            res.status(200).send('Add sensor node config success');
+        }
+    }catch(err){
+        console.log(err);
+        res.status(500).send("Error :"+err);
     }
 });
 

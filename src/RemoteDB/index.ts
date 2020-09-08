@@ -10,17 +10,33 @@ class RemoteDB{
         messagingSenderId: "560283339420",
         appId: "1:560283339420:web:1127bc544e9d129695fb59"
     };
-    private app:firebase.app.App;
+    private static app:firebase.app.App;
     constructor(){
-        this.app = firebase.initializeApp(RemoteDB.FIREBASE_CONFIG);
+        if (!firebase.apps.length) { 
+            RemoteDB.app = firebase.initializeApp(RemoteDB.FIREBASE_CONFIG);
+        }
        
     }
     public getInstance():firebase.app.App{
-        return this.app;
+        return RemoteDB.app;
     }
-    public setCallback(collection:string,document:any,nodeType:string,callback:Function):void{
-        var doc = this.app.firestore().collection(collection).doc(document);
-        doc.onSnapshot(snapshot => callback(nodeType,snapshot));
+    public setCallback(collection:string,document:string,nodeType:string,callback:Function):void{
+        var doc = RemoteDB.app.firestore().collection(collection).doc(document);
+        doc.onSnapshot(snapshot => callback(snapshot));
+    }
+    public async addDocument(collection:string,document:string,data:any):Promise<void>{
+        try{
+            await RemoteDB.app.firestore().collection(collection).doc(document).set(data);
+        }catch (err) {
+            throw err;
+        }
+    }
+    public async updateDocument(collection:string,document:string,data:JSON):Promise<void>{
+        try{
+            await RemoteDB.app.firestore().collection(collection).doc(document).update(data);
+        }catch (err) {
+            throw err;
+        }
     }
 }
 

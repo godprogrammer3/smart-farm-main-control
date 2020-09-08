@@ -5,6 +5,12 @@ class Node {
     startDate:Date;
     endDate:Date;
     value:string;
+    public static readonly NODE_CONTROL_TYPE:string[] = [
+        'switch'
+    ];
+    public static readonly NODE_SENSOR_TYPE:string[] = [
+        'air_temp_and_humid'
+    ];
     constructor(macAddress:string,typeId:number,startDate:Date,endDate:Date,value:string){
         this.macAddress = macAddress;
         this.typeId = typeId;
