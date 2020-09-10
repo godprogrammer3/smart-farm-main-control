@@ -9,7 +9,8 @@ class Node {
         'switch'
     ];
     public static readonly NODE_SENSOR_TYPE:string[] = [
-        'air_temp_and_humid'
+        'air_temp_and_humid',
+        'light'
     ];
     constructor(macAddress:string,typeId:number,startDate:Date,endDate:Date,value:string){
         this.macAddress = macAddress;
