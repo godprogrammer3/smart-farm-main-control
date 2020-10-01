@@ -27,7 +27,7 @@ class RemoteDB {
     var doc = RemoteDB.app.firestore().collection(collection).doc(document);
     doc.onSnapshot((snapshot) => callback(snapshot));
   }
-  public async addDocument(
+  public async setDocument(
     collection: string,
     document: string,
     data: any
@@ -53,6 +53,13 @@ class RemoteDB {
         .collection(collection)
         .doc(document)
         .update(data);
+    } catch (err) {
+      throw err;
+    }
+  }
+  public async addDocument(collection: string, data: any): Promise<void> {
+    try {
+      await RemoteDB.app.firestore().collection(collection).add(data);
     } catch (err) {
       throw err;
     }

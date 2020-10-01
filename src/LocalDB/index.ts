@@ -2,8 +2,6 @@ import mariadb from "mariadb";
 import dotenv from "dotenv";
 import moment from "moment";
 import RemoteDB from "../RemoteDB";
-import { strict } from "assert";
-import { start } from "repl";
 dotenv.config();
 class LocalDB {
   private DB_NAME: string = "smart_farm";
@@ -159,6 +157,8 @@ class LocalDB {
     await this.updateSensorTypeFromRemoteDB();
     await this.updateSensorConfigFromRemoteDB();
     await this.updateSensorFromRemoteDB();
+    await this.updateControlTypeFromRemoteDB();
+    await this.updateControlConfigFromRemoteDB();
 
   }
 
@@ -242,6 +242,74 @@ class LocalDB {
     });
   }
   
+  public async updateControlTypeFromRemoteDB():Promise<void>{
+    var firebaseApp = this.remoteDB.getInstance();
+    var controlTypes = await firebaseApp.firestore().collection('control_type').get();
+    controlTypes.forEach(async (document)=>{
+      try{
+        var conn = await this.pool.getConnection();
+        var sql: string = `
+        INSERT INTO control_type(id, type, display_type) 
+        values ('${document.id}', '${document.data().type}' , '${document.data().display_type}')
+        ON DUPLICATE KEY 
+        UPDATE  type = '${document.data().type}', display_type = '${document.data().display_type}';
+        `;
+        var result = await conn.query(sql);
+        return result[0];
+      }catch (err) {
+        throw err;
+      }
+    });
+  }
+  public async updateControlConfigFromRemoteDB():Promise<void>{
+    var firebaseApp = this.remoteDB.getInstance();
+    var controlConfigs = await firebaseApp.firestore().collection('control_config').get();
+    controlConfigs.forEach(async (document)=>{
+      try{
+        var conn = await this.pool.getConnection();
+        var sql: string = `
+        INSERT INTO control_config(id, control_id, log_interval) 
+        values ('${document.id}', '${document.data().control_id.id}' , ${document.data().log_interval})
+        ON DUPLICATE KEY 
+        UPDATE  control_id = '${document.data().control_id.id}', log_interval = ${document.data().log_interval};
+        `;
+        var result = await conn.query(sql);
+        return result[0];
+      }catch (err) {
+        throw err;
+      }
+    });
+  }
+  public async updateControlFromRemoteDB():Promise<void>{
+    var firebaseApp = this.remoteDB.getInstance();
+    var controls = await firebaseApp.firestore().collection('control').get();
+    controls.forEach(async (document)=>{
+      var start_date:any = moment(new Date(document.data().start_date*1000));
+      start_date.set('year',start_date.year()-1969);
+      start_date = (document.data().start_date!=undefined)?start_date.format('YYYY-MM-DD HH:mm:ss'):null;
+      var end_date :any = moment(new Date(document.data().end_date*1000));
+      end_date.set('year',end_date.year()-1969);
+      end_date = (document.data().end_date!=undefined)?end_date.format('YYYY-MM-DD HH:mm:ss'):null;
+      try{
+        var conn = await this.pool.getConnection();
+        var sql: string = `
+        INSERT INTO control(id, farm_id, mac_address,start_date,end_date,status,type_id,value) 
+        values ('${document.id}', '${document.data().farm_id.id}' , '${document.data().mac_address}',
+              ${start_date!=null?`'${start_date}'`:null} , ${end_date!=null?`'${end_date}'`:null} , '${document.data().status}' , '${document.data().type_id.id}',
+              '${document.data().value}'
+              )
+        ON DUPLICATE KEY 
+        UPDATE  id = '${document.id}',  farm_id = '${document.data().farm_id.id}' , mac_address = '${document.data().mac_address}',
+        start_date = ${start_date!=null?`'${start_date}'`:null} , end_date = ${end_date!=null?`'${end_date}'`:null} , status = '${document.data().status}' , type_id= '${document.data().type_id.id}',
+        value = '${document.data().value}';
+        `;
+        var result = await conn.query(sql);
+        return result[0];
+      }catch (err) {
+        throw err;
+      }
+    });
+  }
 
 }
 
