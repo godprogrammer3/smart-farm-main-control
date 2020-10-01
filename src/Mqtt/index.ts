@@ -3,7 +3,6 @@ import firebase from "firebase";
 import Node from "../Node";
 import RemoteDB from "../RemoteDB";
 import LocalDB from "../LocalDB";
-import moment from "moment";
 class Mqtt {
   private static readonly MQTT_HOST = "192.168.1.2";
   static client: mqtt.Client;
