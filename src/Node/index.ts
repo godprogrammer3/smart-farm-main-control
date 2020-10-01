@@ -1,18 +1,13 @@
 import firebase from 'firebase'; 
 class Node {
+    id:string;
     macAddress: string;
-    typeId:number;
+    typeId:string;
     startDate:Date;
     endDate:Date;
     value:string;
-    public static readonly NODE_CONTROL_TYPE:string[] = [
-        'switch'
-    ];
-    public static readonly NODE_SENSOR_TYPE:string[] = [
-        'air_temp_and_humid',
-        'light'
-    ];
-    constructor(macAddress:string,typeId:number,startDate:Date,endDate:Date,value:string){
+    constructor(id:string,macAddress:string,typeId:string,startDate:Date,endDate:Date,value:string){
+        this.id = id;
         this.macAddress = macAddress;
         this.typeId = typeId;
         this.startDate = startDate;
@@ -22,14 +17,16 @@ class Node {
     public static fromSnapshot(snapshot:firebase.firestore.DocumentSnapshot):Node{
         const data = snapshot.data();   
         if(data !== undefined){
-            return new Node(snapshot.id,data.type_id,data.start_date,data.end_date,data.value);
+            return new Node(snapshot.id,data.mac_address,data.type_id.id,data.start_date,data.end_date,data.value);
         }else{
             throw new Error("snapshot.data() is undefined"); 
         }
         
     }
     toString():string{
-        return `{ macAddress:'${this.macAddress}' , 
+        return `{ 
+                  id:'${this.id}',
+                  macAddress:'${this.macAddress}' , 
                   typeId:'${this.typeId}, 
                   startDate:'${this.startDate} ,
                   endDate:'${this.endDate},

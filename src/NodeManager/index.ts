@@ -12,42 +12,41 @@ class NodeManager {
     this.mqtt = new Mqtt();
   }
   async run(): Promise<void> {
+    await this.localDB.updateFromRemoteDB();
     var controlNodes = await this.localDB.getControlNode();
     this.controlNodeRegist(controlNodes);
-    var sensorNodes = await this.localDB.getSensorNode();
-    var sensorNodesConfig = await this.localDB.getSensorNodeConfig();
+    var sensorNodes:any = await this.localDB.getSensorNode();
+    var sensorNodesConfig:any = await this.localDB.getSensorNodeConfig();
     this.sensorNodeRegist(sensorNodes, sensorNodesConfig);
   }
-  controlNodeRegist(controlNodes: any): void {
+  controlNodeRegist(controlNodes: any):void{
     for (var i = 0; i < controlNodes.length; i++) {
-      switch (controlNodes[i].type_id) {
-        case 0: {
-          this.remoteDB.setCallback(
-            "control",
-            controlNodes[i].mac_address,
-            "control",
-            this.mqtt.resgistControlNode
-          );
-          break;
-        }
-        default: {
-          throw new Error("Unknow control node type");
-        }
-      }
+      this.remoteDB.setCallback(
+              "control",
+              controlNodes[i].id,
+              this.mqtt.resgistControlNode
+            );
     }
   }
-  sensorNodeRegist(sensorNodes: any, sensorNodesConfig: any): void {
-    sensorNodes.forEach((sensorNode:any) => {
+  async sensorNodeRegist(sensorNodes: any, sensorNodesConfig: any): Promise<void> {
+    sensorNodes.forEach(async (sensorNode:any) => {
         var sensorNodeConfig = sensorNodesConfig.find(
           (sensorNodeConfig: any) => {
-            return sensorNodeConfig.sensor_id == sensorNode.mac_address;
+            return sensorNodeConfig.sensor_id == sensorNode.id;
           }
         );
+        var localNodeType:any;
+        try{ 
+          localNodeType = await this.localDB.getSensorTypeById(sensorNode.type_id);
+        }catch(err){
+          throw err;
+        }
         setInterval(
           () =>
             this.mqtt.sensorNodeUpdateValue(
             sensorNode.mac_address,
-              Node.NODE_SENSOR_TYPE[sensorNode.type_id]
+              localNodeType.type,
+              sensorNode.id
             ),
             sensorNodeConfig.log_interval * 1000
         )
