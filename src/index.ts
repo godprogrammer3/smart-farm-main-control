@@ -11,7 +11,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use("/", Router);
 app.listen(3000, () => {
-    console.log("-> time stamp:",new Date());
+    console.log("-> time stamp:",new Date().toLocaleString());
     console.log("-> Server listening on port 3000");});
 
 const nodeManager: NodeManager = container.resolve(NodeManager);

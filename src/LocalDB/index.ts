@@ -4,6 +4,7 @@ import moment from "moment";
 import RemoteDB from "../RemoteDB";
 import {singleton} from "tsyringe";
 import {container} from "tsyringe";
+import NodeControlConfig from "../DataModel/NodeControlConfig";
 dotenv.config();
 
 @singleton()
@@ -48,6 +49,17 @@ class LocalDB {
       var result = await conn.query(sql);
       conn.end();
       return result;
+    } catch (err) {
+      throw err;
+    }
+  }
+  public async getControlNodeById(id:string): Promise<any> {
+    try {
+      var conn = await this.pool.getConnection();
+      var sql: string = `SELECT * FROM control WHERE id = '${id}';`;
+      var result = await conn.query(sql);
+      conn.end();
+      return result[0];
     } catch (err) {
       throw err;
     }
@@ -123,6 +135,17 @@ class LocalDB {
             )`;
       await conn.query(sql);
       conn.end();
+    } catch (err) {
+      throw err;
+    }
+  }
+  public async getControlNodeConfig(): Promise<any> {
+    try {
+      var conn = await this.pool.getConnection();
+      var sql: string = `SELECT * FROM control_config;`;
+      var result = await conn.query(sql);
+      conn.end();
+      return result;
     } catch (err) {
       throw err;
     }
@@ -355,15 +378,22 @@ class LocalDB {
     controlConfigs.forEach(async (document) => {
       try {
         var conn = await this.pool.getConnection();
+        const controlConfig:NodeControlConfig = NodeControlConfig.fromSnapshot(document);
         var sql: string = `
-        INSERT INTO control_config(id, control_id, log_interval) 
-        values ('${document.id}', '${document.data().control_id.id}' , ${
-          document.data().log_interval
-        })
+        INSERT INTO control_config(id, control_id, log_interval,cron_time,period_time,value) 
+        values ('${controlConfig.id}', '${controlConfig.controlId}' , ${
+          controlConfig.logInterval
+        },'${controlConfig.cronTime}',${controlConfig.periodTime},'${controlConfig.value}'
+        
+        )
         ON DUPLICATE KEY 
         UPDATE  control_id = '${
-          document.data().control_id.id
-        }', log_interval = ${document.data().log_interval};
+          controlConfig.controlId
+        }', log_interval = ${controlConfig.logInterval},
+        cron_time = '${controlConfig.cronTime}',
+        period_time = ${controlConfig.periodTime},
+        value = '${controlConfig.value}'
+        ;
         `;
         var result = await conn.query(sql);
         conn.end();

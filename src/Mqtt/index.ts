@@ -1,6 +1,6 @@
 import mqtt from "mqtt";
 import firebase from "firebase";
-import Node from "../Node";
+import Node from "../DataModel/Node";
 import RemoteDB from "../RemoteDB";
 import LocalDB from "../LocalDB";
 import {singleton} from "tsyringe";
@@ -28,7 +28,7 @@ class Mqtt {
     snapshot: firebase.firestore.DocumentSnapshot
   ): Promise<void> {
     const node: Node = Node.fromSnapshot(snapshot);
-    console.log('-> time stamp:',new Date());
+    console.log('-> time stamp:',new Date().toLocaleString());
     console.log('-> Node control update from firebase');
     console.log(" -> id:",node.id);
     console.log(" -> mac_address:",node.macAddress);
@@ -41,10 +41,7 @@ class Mqtt {
       console.log("Error :",err);
       throw err;
     }
-    Mqtt.client.publish(
-      `Node/${node.macAddress}`,
-      `set;${localNodeType.type};${node.value};`
-    );
+    Mqtt.controlNodeSetValue(node.macAddress,localNodeType.type,node.value);
     const firebaseApp = Mqtt.remoteDB.getInstance();
     const farm: any = await Mqtt.localDB.getFarmInfo();
     const data = {
@@ -62,7 +59,7 @@ class Mqtt {
   } 
   private async manageMessage(topic: string, message: Buffer): Promise<void> {
     var messageList: string[] = message.toString().split(",");
-    console.log("-> time stamp:",new Date());
+    console.log("-> time stamp:",new Date().toLocaleString());
     console.log("-> Update " + message.toString());
     Mqtt.remoteDB.updateDocument(
       "sensor",
@@ -90,7 +87,7 @@ class Mqtt {
     sensorNodeType: string,
     sensorNodeId: string,
   ): Promise<void> {
-    console.log("-> time stamp:",new Date());
+    console.log("-> time stamp:",new Date().toLocaleString());
     console.log("-> Sensor update");
     console.log(" -> id:",sensorNodeId);
     console.log(" -> mac_address:",macAddress);
@@ -100,6 +97,16 @@ class Mqtt {
     Mqtt.client.publish(topic, payload);
     let sensorConfig = await  Mqtt.localDB.getSensorNodeConfigBySensorId(sensorNodeId);
     setTimeout(()=>this.sensorNodeUpdateValue(macAddress,sensorNodeType,sensorNodeId),sensorConfig.log_interval*1000);
+  }
+
+  public static async controlNodeSetValue(
+    macAddress:String,
+    type:String,
+    value:String
+  ):Promise<void>{
+    var topic: string = `Node/${macAddress}`;
+    var payload: string = `set;${type};${value};`;
+    Mqtt.client.publish(topic, payload);
   }
 }
 
