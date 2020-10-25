@@ -1,23 +1,24 @@
 import LocalDB from "../LocalDB";
 import RemoteDB from "../RemoteDB";
 import Mqtt from "../Mqtt";
-import Node from "../Node";
+import {singleton} from "tsyringe";
+import {container} from "tsyringe";
+@singleton()
 class NodeManager {
   localDB: LocalDB;
   remoteDB: RemoteDB;
   mqtt: Mqtt;
   constructor() {
-    this.localDB = new LocalDB();
-    this.remoteDB = new RemoteDB();
-    this.mqtt = new Mqtt();
+    this.localDB = container.resolve(LocalDB);
+    this.remoteDB = container.resolve(RemoteDB);
+    this.mqtt = container.resolve(Mqtt);
   }
   async run(): Promise<void> {
     await this.localDB.updateFromRemoteDB();
     var controlNodes = await this.localDB.getControlNode();
     this.controlNodeRegist(controlNodes);
     var sensorNodes:any = await this.localDB.getSensorNode();
-    var sensorNodesConfig:any = await this.localDB.getSensorNodeConfig();
-    this.sensorNodeRegist(sensorNodes, sensorNodesConfig);
+    this.sensorNodeRegist(sensorNodes);
   }
   controlNodeRegist(controlNodes: any):void{
     for (var i = 0; i < controlNodes.length; i++) {
@@ -28,28 +29,19 @@ class NodeManager {
             );
     }
   }
-  async sensorNodeRegist(sensorNodes: any, sensorNodesConfig: any): Promise<void> {
+  async sensorNodeRegist(sensorNodes: any): Promise<void> {
     sensorNodes.forEach(async (sensorNode:any) => {
-        var sensorNodeConfig = sensorNodesConfig.find(
-          (sensorNodeConfig: any) => {
-            return sensorNodeConfig.sensor_id == sensorNode.id;
-          }
-        );
         var localNodeType:any;
         try{ 
           localNodeType = await this.localDB.getSensorTypeById(sensorNode.type_id);
         }catch(err){
           throw err;
         }
-        setInterval(
-          () =>
-            this.mqtt.sensorNodeUpdateValue(
-            sensorNode.mac_address,
-              localNodeType.type,
-              sensorNode.id
-            ),
-            sensorNodeConfig.log_interval * 1000
-        )
+        this.mqtt.sensorNodeUpdateValue(
+        sensorNode.mac_address,
+          localNodeType.type,
+          sensorNode.id,
+        );
     });
   }
 }

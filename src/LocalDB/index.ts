@@ -2,7 +2,11 @@ import mariadb from "mariadb";
 import dotenv from "dotenv";
 import moment from "moment";
 import RemoteDB from "../RemoteDB";
+import {singleton} from "tsyringe";
+import {container} from "tsyringe";
 dotenv.config();
+
+@singleton()
 class LocalDB {
   private DB_NAME: string = "smart_farm";
   private pool: mariadb.Pool;
@@ -10,13 +14,13 @@ class LocalDB {
   constructor() {
     this.pool = mariadb.createPool({
       host: "localhost",
-      port: 3307,
+      port: 3306,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: "smart_farm",
       connectionLimit: 50,
     });
-    this.remoteDB = new RemoteDB();
+    this.remoteDB = container.resolve(RemoteDB);
   }
   public async addControlNode(
     mac_address: string,
@@ -32,7 +36,7 @@ class LocalDB {
             'running'
             )`;
       await conn.query(sql);
-      conn.release();
+      conn.end();
     } catch (err) {
       throw err;
     }
@@ -42,6 +46,7 @@ class LocalDB {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM control;`;
       var result = await conn.query(sql);
+      conn.end();
       return result;
     } catch (err) {
       throw err;
@@ -61,7 +66,7 @@ class LocalDB {
             'running'
             )`;
       await conn.query(sql);
-      conn.release();
+      conn.end();
     } catch (err) {
       throw err;
     }
@@ -71,6 +76,7 @@ class LocalDB {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM sensor;`;
       var result = await conn.query(sql);
+      conn.end();
       return result;
     } catch (err) {
       throw err;
@@ -81,6 +87,7 @@ class LocalDB {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM sensor WHERE id = '${id}';`;
       var result = await conn.query(sql);
+      conn.end();
       return result[0];
     } catch (err) {
       throw err;
@@ -98,7 +105,7 @@ class LocalDB {
             ${log_interval}
             )`;
       await conn.query(sql);
-      conn.release();
+      conn.end();
     } catch (err) {
       throw err;
     }
@@ -115,7 +122,7 @@ class LocalDB {
             ${log_interval}
             )`;
       await conn.query(sql);
-      conn.release();
+      conn.end();
     } catch (err) {
       throw err;
     }
@@ -125,17 +132,33 @@ class LocalDB {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM sensor_config;`;
       var result = await conn.query(sql);
+      conn.end();
       return result;
     } catch (err) {
       throw err;
     }
   }
+  public async getSensorNodeConfigBySensorId(sensorId:String): Promise<any> {
+    try {
+    
+      var conn = await this.pool.getConnection();
+      var sql: string = `SELECT * FROM sensor_config WHERE sensor_id = '${sensorId}';`;
+      var result = await conn.query(sql);
+      conn.end();
+      return result[0];
+    } catch (err) {
+      console.log('Error :',err);
+      throw err;
+    }
+  }
+
 
   public async getControlTypeById(id: string): Promise<any> {
     try {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM control_type WHERE id = '${id}';`;
       var result = await conn.query(sql);
+      conn.end();
       return result[0];
     } catch (err) {
       throw err;
@@ -147,6 +170,7 @@ class LocalDB {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM sensor_type WHERE id = '${id}';`;
       var result = await conn.query(sql);
+      conn.end();
       return result[0];
     } catch (err) {
       throw err;
@@ -155,10 +179,17 @@ class LocalDB {
 
   public async updateFromRemoteDB(): Promise<void> {
     await this.updateSensorTypeFromRemoteDB();
+    console.log("Updated sensor_type succeed");
     await this.updateSensorConfigFromRemoteDB();
+    console.log("Updated sensor_config succeed");
     await this.updateSensorFromRemoteDB();
+    console.log("Updated sensor succeed");
     await this.updateControlTypeFromRemoteDB();
+    console.log("Updated control_type succeed");
     await this.updateControlConfigFromRemoteDB();
+    console.log("Updated control_config succeed");
+    await this.updateControlFromRemoteDB();
+    console.log("Updated control succeed");
   }
 
   public async getFarmInfo(): Promise<any> {
@@ -166,6 +197,7 @@ class LocalDB {
       var conn = await this.pool.getConnection();
       var sql: string = `SELECT * FROM farm WHERE 1;`;
       var result = await conn.query(sql);
+      conn.end();
       return result[0];
     } catch (err) {
       throw err;
@@ -182,16 +214,13 @@ class LocalDB {
       try {
         var conn = await this.pool.getConnection();
         var sql: string = `
-        INSERT INTO sensor_type(id, type, display_type) 
-        values ('${document.id}', '${document.data().type}' , '${
-          document.data().display_type
-        }')
+        INSERT INTO sensor_type(id, type) 
+        values ('${document.id}', '${document.data().type}')
         ON DUPLICATE KEY 
-        UPDATE  type = '${document.data().type}', display_type = '${
-          document.data().display_type
-        }';
+        UPDATE  type = '${document.data().type}';
         `;
         var result = await conn.query(sql);
+        conn.end();
         return result[0];
       } catch (err) {
         throw err;
@@ -224,6 +253,7 @@ class LocalDB {
         };
         `;
         var result = await conn.query(sql);
+        conn.end();
         return result[0];
       } catch (err) {
         throw err;
@@ -237,11 +267,12 @@ class LocalDB {
       .firestore()
       .collection("farm")
       .doc(farmLocalDB.id);
+    
     var sensors = await firebaseApp
       .firestore()
       .collection("sensor")
       .where("farm_id", "==", farmIdRef)
-      .get();
+      .get();    
     sensors.forEach(async (document) => {
       var start_date: any = moment(new Date(document.data().start_date * 1000));
       start_date.set("year", start_date.year() - 1969);
@@ -266,7 +297,7 @@ class LocalDB {
               '${document.data().value}'
               )
         ON DUPLICATE KEY 
-        UPDATE  id = '${document.id}', 
+        UPDATE   
         mac_address = '${document.data().mac_address}',
         start_date = ${
           start_date != null ? `'${start_date}'` : null
@@ -278,6 +309,7 @@ class LocalDB {
         value = '${document.data().value}';
         `;
         var result = await conn.query(sql);
+        conn.end();
         return result[0];
       } catch (err) {
         throw err;
@@ -295,16 +327,13 @@ class LocalDB {
       try {
         var conn = await this.pool.getConnection();
         var sql: string = `
-        INSERT INTO control_type(id, type, display_type) 
-        values ('${document.id}', '${document.data().type}' , '${
-          document.data().display_type
-        }')
+        INSERT INTO control_type(id, type) 
+        values ('${document.id}', '${document.data().type}')
         ON DUPLICATE KEY 
-        UPDATE  type = '${document.data().type}', display_type = '${
-          document.data().display_type
-        }';
+        UPDATE  type = '${document.data().type}';
         `;
         var result = await conn.query(sql);
+        conn.end();
         return result[0];
       } catch (err) {
         throw err;
@@ -337,6 +366,7 @@ class LocalDB {
         }', log_interval = ${document.data().log_interval};
         `;
         var result = await conn.query(sql);
+        conn.end();
         return result[0];
       } catch (err) {
         throw err;
@@ -371,19 +401,16 @@ class LocalDB {
       try {
         var conn = await this.pool.getConnection();
         var sql: string = `
-        INSERT INTO control(id, farm_id, mac_address,start_date,end_date,status,type_id,value) 
-        values ('${document.id}', '${document.data().farm_id.id}' , '${
-          document.data().mac_address
-        }',
+        INSERT INTO control(id, mac_address,start_date,end_date,status,type_id,value) 
+        values ('${document.id}', '${document.data().mac_address}',
               ${start_date != null ? `'${start_date}'` : null} , ${
           end_date != null ? `'${end_date}'` : null
         } , '${document.data().status}' , '${document.data().type_id.id}',
               '${document.data().value}'
               )
         ON DUPLICATE KEY 
-        UPDATE  id = '${document.id}',  farm_id = '${
-          document.data().farm_id.id
-        }' , mac_address = '${document.data().mac_address}',
+        UPDATE  id = '${document.id}',  
+        mac_address = '${document.data().mac_address}',
         start_date = ${
           start_date != null ? `'${start_date}'` : null
         } , end_date = ${
@@ -394,6 +421,7 @@ class LocalDB {
         value = '${document.data().value}';
         `;
         var result = await conn.query(sql);
+        conn.end();
         return result[0];
       } catch (err) {
         throw err;

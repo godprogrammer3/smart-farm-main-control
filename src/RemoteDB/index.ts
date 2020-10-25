@@ -1,5 +1,8 @@
 import * as firebase from "firebase/app";
 import "firebase/firestore";
+import {singleton} from "tsyringe";
+
+@singleton()
 class RemoteDB {
   private static readonly FIREBASE_CONFIG = {
     apiKey: "AIzaSyBHEHHC5wfXZakJKFvLlPT_625zQP0iUe8",

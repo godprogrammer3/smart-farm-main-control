@@ -11,7 +11,10 @@ const NodeManager_1 = __importDefault(require("./NodeManager"));
 const app = express_1.default();
 app.use(cors_1.default());
 app.use(body_parser_1.default.json());
-app.use('/', Router_1.default);
-app.listen(3000, () => console.log('Server listening on port 3000'));
+app.use("/", Router_1.default);
+app.listen(3000, () => console.log("Server listening on port 3000"));
 const nodeManager = new NodeManager_1.default();
 nodeManager.run();
+// const testSpace : TestSpace = new TestSpace();
+// testSpace.test();
+//TODO : Implement routine by cron(npm i cron) use routine collection by very simple to only set value add a time.
