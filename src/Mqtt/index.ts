@@ -27,6 +27,9 @@ class Mqtt {
   public async resgistControlNode(
     snapshot: firebase.firestore.DocumentSnapshot
   ): Promise<void> {
+    if(!snapshot.exists){
+      process.exit();
+    }
     const node: Node = Node.fromSnapshot(snapshot);
     console.log('-> time stamp:',new Date().toLocaleString());
     console.log('-> Node control update from firebase');

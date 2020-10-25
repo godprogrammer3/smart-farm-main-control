@@ -62,6 +62,9 @@ class NodeManager {
     for(var i = 0 ; i < controlConfigNode.length ; i++){
       this.controlScheduleSet(controlConfigNode[i]);
       this.remoteDB.setCallback('control_config',controlConfigNode[i].id,(snapshot: firebase.firestore.DocumentSnapshot,context=this)=>{
+        if(!snapshot.exists){
+          process.exit();
+        }
         const controlConfig:NodeControlConfig = NodeControlConfig.fromSnapshot(snapshot);
         context.controlScheduleSet(controlConfig);
       });
@@ -86,12 +89,12 @@ class NodeManager {
       }
       this.jobs[controlConfig.id] = new CronJob(controlConfig.cronTime,
         ( dummyParam = null, paramControlConfig = controlConfig,paramControlNode:Node = controlNode , paramControlType:NodeControlType = controlType)=>{
-        this.runControlJob(paramControlNode.macAddress,paramControlType.type,paramControlConfig.value,paramControlConfig.periodTime,paramControlType.defaultValue);
+        this.runControlJob(paramControlNode.id, paramControlNode.macAddress,paramControlType.type,paramControlConfig.value,paramControlConfig.periodTime,paramControlType.defaultValue);
       },null,false,'Asia/Bangkok',this);
       this.jobs[controlConfig.id].start();
   }
 
-  async runControlJob(macaddress:string,type:string,startValue:string,periodTime:number,endValue:string):Promise<void>{
+  async runControlJob(controlNodeId:string,macaddress:string,type:string,startValue:string,periodTime:number,endValue:string):Promise<void>{
     console.log("-> time stamp:",new Date().toLocaleString());
     console.log("-> Run control job");
     console.log(" -> mac_address:",macaddress);
@@ -100,8 +103,9 @@ class NodeManager {
     console.log(" -> periodTime:",periodTime);
     console.log(" -> endValue:",endValue);
     Mqtt.controlNodeSetValue(macaddress,type,startValue);
+    this.remoteDB.updateDocument('control',controlNodeId,JSON.parse(`{"value":"${startValue}"}`));
     if(periodTime>0){
-      setTimeout(()=>this.runControlJob(macaddress,type,endValue,-1,''),periodTime*1000);
+      setTimeout(()=>this.runControlJob(controlNodeId, macaddress,type,endValue,-1,''),periodTime*1000);
     }
   }
 
