@@ -109,7 +109,7 @@ class Mqtt {
   ):Promise<void>{
     var topic: string = `Node/${macAddress}`;
     var payload: string = `set;${type};${value};`;
-    Mqtt.client.publish(topic, payload);
+    Mqtt.client.publish(topic, payload,{retain:true});
   }
 }
 
