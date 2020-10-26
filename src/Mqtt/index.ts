@@ -7,7 +7,7 @@ import {singleton} from "tsyringe";
 import {container} from "tsyringe";
 @singleton()
 class Mqtt {
-  private static readonly MQTT_HOST = "192.168.1.2";
+  private static readonly MQTT_HOST = "localhost";
   static client: mqtt.Client;
   static remoteDB: RemoteDB;
   static localDB: LocalDB;
