@@ -40,7 +40,7 @@ CREATE TABLE `control` (
 
 LOCK TABLES `control` WRITE;
 /*!40000 ALTER TABLE `control` DISABLE KEYS */;
-INSERT INTO `control` VALUES ('cI7oo4PmMo1sfuAdV13X','34spr9WWTedwQnS73Vav','DC:4F:22:89:25:F9','2020-09-10 05:00:00','2020-09-09 18:00:00','running','0');
+INSERT INTO `control` VALUES ('cI7oo4PmMo1sfuAdV13X','34spr9WWTedwQnS73Vav','DC:4F:22:89:25:F9','2020-09-09 17:00:00','2020-09-09 18:00:00','running','0');
 /*!40000 ALTER TABLE `control` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -56,6 +56,9 @@ CREATE TABLE `control_config` (
   `control_id` varchar(100) DEFAULT NULL,
   `log_interval` int(11) DEFAULT NULL,
   `toggle_interval` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`toggle_interval`)),
+  `cron_time` varchar(100) DEFAULT NULL,
+  `value` varchar(100) DEFAULT NULL,
+  `period_time` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -66,7 +69,7 @@ CREATE TABLE `control_config` (
 
 LOCK TABLES `control_config` WRITE;
 /*!40000 ALTER TABLE `control_config` DISABLE KEYS */;
-INSERT INTO `control_config` VALUES ('dK96QYxOgIMrJS5lbrgo','cI7oo4PmMo1sfuAdV13X',5,'{\r\n	\"end\" : \"\",\r\n	\"start\" : \"\"\r\n\r\n}');
+INSERT INTO `control_config` VALUES ('dK96QYxOgIMrJS5lbrgo','cI7oo4PmMo1sfuAdV13X',5,NULL,'0 49 2 * * 1','1',10);
 /*!40000 ALTER TABLE `control_config` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -106,6 +109,7 @@ DROP TABLE IF EXISTS `control_type`;
 CREATE TABLE `control_type` (
   `id` varchar(100) NOT NULL,
   `type` varchar(100) DEFAULT NULL,
+  `default_value` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -116,7 +120,7 @@ CREATE TABLE `control_type` (
 
 LOCK TABLES `control_type` WRITE;
 /*!40000 ALTER TABLE `control_type` DISABLE KEYS */;
-INSERT INTO `control_type` VALUES ('34spr9WWTedwQnS73Vav','switch');
+INSERT INTO `control_type` VALUES ('34spr9WWTedwQnS73Vav','switch','0');
 /*!40000 ALTER TABLE `control_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -143,7 +147,7 @@ CREATE TABLE `farm` (
 
 LOCK TABLES `farm` WRITE;
 /*!40000 ALTER TABLE `farm` DISABLE KEYS */;
-INSERT INTO `farm` VALUES ('z7DQriHo8n3L4ZGkc3yX ','2020-09-13 04:11:11','Hardware farm','fruit&vegateble','123');
+INSERT INTO `farm` VALUES ('z7DQriHo8n3L4ZGkc3yX','2020-09-13 04:11:11','Hardware farm','fruit&vegateble','123');
 /*!40000 ALTER TABLE `farm` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -180,13 +184,14 @@ DROP TABLE IF EXISTS `sensor`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sensor` (
-  `id` varchar(100) DEFAULT NULL,
+  `id` varchar(100) NOT NULL,
   `mac_address` varchar(100) DEFAULT NULL,
   `start_date` timestamp NULL DEFAULT NULL,
   `end_date` timestamp NULL DEFAULT NULL,
   `type_id` varchar(100) DEFAULT NULL,
   `status` varchar(100) DEFAULT NULL,
-  `value` varchar(100) DEFAULT NULL
+  `value` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -196,6 +201,7 @@ CREATE TABLE `sensor` (
 
 LOCK TABLES `sensor` WRITE;
 /*!40000 ALTER TABLE `sensor` DISABLE KEYS */;
+INSERT INTO `sensor` VALUES ('rMaB5XfQAk3AklUctxB5','DC:4F:22:89:26:05','2020-09-09 17:00:00',NULL,'U41eih3VyrdoBdbFNz3o','running','65.30'),('WGKY7qXggBzzTRjAFxjd','DC:4F:22:89:26:05','2020-09-01 04:11:11',NULL,'7Rj8D1TcgiGIafwVQ5mL','running','26.40');
 /*!40000 ALTER TABLE `sensor` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -220,6 +226,7 @@ CREATE TABLE `sensor_config` (
 
 LOCK TABLES `sensor_config` WRITE;
 /*!40000 ALTER TABLE `sensor_config` DISABLE KEYS */;
+INSERT INTO `sensor_config` VALUES ('fnuxPjBN3zMPurwukf8Y','WGKY7qXggBzzTRjAFxjd',600),('RBL0QmMxNTmechLY5DgD','rMaB5XfQAk3AklUctxB5',600);
 /*!40000 ALTER TABLE `sensor_config` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -243,6 +250,7 @@ CREATE TABLE `sensor_type` (
 
 LOCK TABLES `sensor_type` WRITE;
 /*!40000 ALTER TABLE `sensor_type` DISABLE KEYS */;
+INSERT INTO `sensor_type` VALUES ('7Rj8D1TcgiGIafwVQ5mL','air_temp'),('dbUxmFirw9qeuVJKmMYI','light'),('U41eih3VyrdoBdbFNz3o','air_humid');
 /*!40000 ALTER TABLE `sensor_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -259,4 +267,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-10-25  7:38:53
+-- Dump completed on 2020-10-26  8:21:18
