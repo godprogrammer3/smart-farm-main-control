@@ -15,6 +15,7 @@ class Mqtt {
     Mqtt.client = mqtt.connect({ host: Mqtt.MQTT_HOST });
     Mqtt.client.on("connect", () => {
       console.log("-> Mqtt client connected");
+      console.log('-> time stamp:',new Date().toLocaleString());
     });
     Mqtt.client.subscribe("Node/+/value");
     Mqtt.client.on("message", this.manageMessage);

@@ -71,6 +71,7 @@ class RemoteDB {
 
   public logHandler(callbackParams:any):void{
     console.log('-> Firebase log');
+    console.log('-> time stamp:',new Date().toLocaleString());
     console.log(' -> level:',callbackParams.level);
     console.log(' -> type:',callbackParams.type);
     console.log(' -> message:',callbackParams.message);
