@@ -18,6 +18,7 @@ class RemoteDB {
     if (!firebase.apps.length) {
       RemoteDB.app = firebase.initializeApp(RemoteDB.FIREBASE_CONFIG);
     }
+    firebase.onLog((callbackParams)=>this.logHandler(callbackParams),{level:'debug'})
   }
   public getInstance(): firebase.app.App {
     return RemoteDB.app;
@@ -65,6 +66,17 @@ class RemoteDB {
       await RemoteDB.app.firestore().collection(collection).add(data);
     } catch (err) {
       throw err;
+    }
+  }
+
+  public logHandler(callbackParams:any):void{
+    console.log('-> Firebase log');
+    console.log(' -> level:',callbackParams.level);
+    console.log(' -> type:',callbackParams.type);
+    console.log(' -> message:',callbackParams.message);
+    console.log(' -> args:',callbackParams.args);
+    if(callbackParams.level == 'error'){
+      process.exit();
     }
   }
 }
