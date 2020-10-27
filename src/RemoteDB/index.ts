@@ -1,6 +1,6 @@
 import * as firebase from "firebase/app";
 import "firebase/firestore";
-import {singleton} from "tsyringe";
+import { singleton } from "tsyringe";
 
 @singleton()
 class RemoteDB {
@@ -18,7 +18,7 @@ class RemoteDB {
     if (!firebase.apps.length) {
       RemoteDB.app = firebase.initializeApp(RemoteDB.FIREBASE_CONFIG);
     }
-    firebase.onLog((callbackParams)=>this.logHandler(callbackParams),{level:'debug'})
+    firebase.onLog((callbackParams) => this.logHandler(callbackParams), { level: 'debug' })
   }
   public getInstance(): firebase.app.App {
     return RemoteDB.app;
@@ -69,14 +69,14 @@ class RemoteDB {
     }
   }
 
-  public logHandler(callbackParams:any):void{
+  public logHandler(callbackParams: any): void {
     console.log('-> Firebase log');
-    console.log('-> time stamp:',new Date().toLocaleString());
-    console.log(' -> level:',callbackParams.level);
-    console.log(' -> type:',callbackParams.type);
-    console.log(' -> message:',callbackParams.message);
-    console.log(' -> args:',callbackParams.args);
-    if(callbackParams.level == 'error'){
+    console.log('-> time stamp:', new Date().toLocaleString());
+    console.log(' -> level:', callbackParams.level);
+    console.log(' -> type:', callbackParams.type);
+    console.log(' -> message:', callbackParams.message);
+    console.log(' -> args:', callbackParams.args);
+    if (callbackParams.level == 'error' || callbackParams.level == 'warn') {
       process.exit();
     }
   }

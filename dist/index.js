@@ -4,22 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require("reflect-metadata");
-const express_1 = __importDefault(require("express"));
-const Router_1 = __importDefault(require("./Router"));
-const cors_1 = __importDefault(require("cors"));
-const body_parser_1 = __importDefault(require("body-parser"));
 const NodeManager_1 = __importDefault(require("./NodeManager"));
 const tsyringe_1 = require("tsyringe");
-const app = express_1.default();
-app.use(cors_1.default());
-app.use(body_parser_1.default.json());
-app.use("/", Router_1.default);
-app.listen(3000, () => {
-    console.log("-> time stamp:", new Date().toLocaleString());
-    console.log("-> Server listening on port 3000");
-});
 const nodeManager = tsyringe_1.container.resolve(NodeManager_1.default);
+console.log("######################## Started Service #####################");
+console.log('-> time stamp:', new Date().toLocaleString());
 nodeManager.run();
-// const testSpace : TestSpace = new TestSpace();
-// testSpace.test();
-//TODO : Implement routine by cron(npm i cron) use routine collection by very simple to only set value add a time.
