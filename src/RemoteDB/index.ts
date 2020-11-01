@@ -1,4 +1,4 @@
-import * as firebase from "firebase/app";
+import firebase from "firebase/app";
 import "firebase/firestore";
 import { singleton } from "tsyringe";
 
@@ -29,7 +29,7 @@ class RemoteDB {
     callback: Function
   ): void {
     var doc = RemoteDB.app.firestore().collection(collection).doc(document);
-    doc.onSnapshot((snapshot) => callback(snapshot));
+    doc.onSnapshot((snapshot: firebase.firestore.DocumentSnapshot) => callback(snapshot));
   }
   public async setDocument(
     collection: string,

@@ -39,6 +39,17 @@ const restartJob = new cron_1.CronJob('11 11 * * * *', () => __awaiter(void 0, v
             const controlType = NodeControlType_1.default.fromLocalDB(controlTypeLocalDB);
             nodeManager.runControlJob(controlNode.id, controlNode.macAddress, controlType.type, controlNodeConfig.value);
         }
+        var durationEnd = moment_1.default.duration(nodeManager.jobs[item].end.nextDate().diff(moment_1.default(new Date())));
+        var secondEnd = durationEnd.asSeconds();
+        if (secondEnd < 10) {
+            const controlNodeConfigLocalDBEnd = yield nodeManager.localDB.getControlNodeConfigById(item);
+            const controlNodeConfigEnd = NodeControlConfig_1.default.fromLocalDB(controlNodeConfigLocalDBEnd);
+            const controlNodeLocalDBEnd = yield nodeManager.localDB.getControlNodeById(controlNodeConfigEnd.controlId);
+            const controlNodeEnd = Node_1.default.fromLocalDB(controlNodeLocalDBEnd);
+            const controlTypeLocalDBEnd = yield nodeManager.localDB.getControlTypeById(controlNodeEnd.typeId);
+            const controlTypeEnd = NodeControlType_1.default.fromLocalDB(controlTypeLocalDBEnd);
+            nodeManager.runControlJob(controlNodeEnd.id, controlNodeEnd.macAddress, controlTypeEnd.type, controlNodeConfigEnd.value);
+        }
     }
     process.exit();
 }), null, false, 'Asia/Bangkok', this);

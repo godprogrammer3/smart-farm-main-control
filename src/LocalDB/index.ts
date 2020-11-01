@@ -2,8 +2,8 @@ import mariadb from "mariadb";
 import dotenv from "dotenv";
 import moment from "moment";
 import RemoteDB from "../RemoteDB";
-import {singleton} from "tsyringe";
-import {container} from "tsyringe";
+import { singleton } from "tsyringe";
+import { container } from "tsyringe";
 import NodeControlConfig from "../DataModel/NodeControlConfig";
 import NodeSensorConfig from "../DataModel/NodeSensorConfig";
 import firebase from "firebase";
@@ -55,7 +55,7 @@ class LocalDB {
       throw err;
     }
   }
-  public async getControlNodeById(id:string): Promise<any> {
+  public async getControlNodeById(id: string): Promise<any> {
     try {
       var conn = await LocalDB.pool.getConnection();
       var sql: string = `SELECT * FROM control WHERE id = '${id}';`;
@@ -163,16 +163,30 @@ class LocalDB {
       throw err;
     }
   }
-  public async getSensorNodeConfigBySensorId(sensorId:String): Promise<any> {
+  public async getSensorNodeConfigBySensorId(sensorId: String): Promise<any> {
     try {
-    
+
       var conn = await LocalDB.pool.getConnection();
       var sql: string = `SELECT * FROM sensor_config WHERE sensor_id = '${sensorId}';`;
       var result = await conn.query(sql);
       conn.end();
       return result[0];
     } catch (err) {
-      console.log('Error :',err);
+      console.log('Error :', err);
+      throw err;
+    }
+  }
+
+  public async getControlNodeConfigById(id: String): Promise<any> {
+    try {
+
+      var conn = await LocalDB.pool.getConnection();
+      var sql: string = `SELECT * FROM control_config WHERE id = '${id}';`;
+      var result = await conn.query(sql);
+      conn.end();
+      return result[0];
+    } catch (err) {
+      console.log('Error :', err);
       throw err;
     }
   }
@@ -237,15 +251,15 @@ class LocalDB {
       .firestore()
       .collection("sensor_type")
       .get();
-    const sensorTypeIdList = sensorTypes.docs.map((document)=>{
+    const sensorTypeIdList = sensorTypes.docs.map((document) => {
       return document.id;
-    }); 
+    });
     var conn = await LocalDB.pool.getConnection();
     var delSQl = `DELETE FROM sensor_type WHERE id NOT IN (`;
-    sensorTypeIdList.forEach((element)=>{
-      delSQl +=`'${element}',`;
+    sensorTypeIdList.forEach((element) => {
+      delSQl += `'${element}',`;
     });
-    delSQl = delSQl.slice(0,-1);
+    delSQl = delSQl.slice(0, -1);
     delSQl += ');'
     await conn.query(delSQl);
     sensorTypes.forEach(async (document) => {
@@ -276,30 +290,28 @@ class LocalDB {
       .collection("sensor_config")
       .where("farm_id", "==", farmIdRef)
       .get();
-    const  sensorConfigList = sensorConfigs.docs.map((document)=>{
-        return document.id;
-      }); 
-      var conn = await LocalDB.pool.getConnection();
-      var delSQl = `DELETE FROM sensor_config WHERE id NOT IN (`;
-       sensorConfigList.forEach((element)=>{
-        delSQl +=`'${element}',`;
-      });
-      delSQl = delSQl.slice(0,-1);
-      delSQl += ');'
-      // console.log(delSQl);
-      await conn.query(delSQl);
+    const sensorConfigList = sensorConfigs.docs.map((document) => {
+      return document.id;
+    });
+    var conn = await LocalDB.pool.getConnection();
+    var delSQl = `DELETE FROM sensor_config WHERE id NOT IN (`;
+    sensorConfigList.forEach((element) => {
+      delSQl += `'${element}',`;
+    });
+    delSQl = delSQl.slice(0, -1);
+    delSQl += ');'
+    // console.log(delSQl);
+    await conn.query(delSQl);
     sensorConfigs.forEach(async (document) => {
       try {
         var conn = await LocalDB.pool.getConnection();
         var sql: string = `
         INSERT INTO sensor_config(id, sensor_id, log_interval) 
-        values ('${document.id}', '${document.data().sensor_id.id}' , ${
-          document.data().log_interval
-        })
+        values ('${document.id}', '${document.data().sensor_id.id}' , ${document.data().log_interval
+          })
         ON DUPLICATE KEY 
-        UPDATE  sensor_id = '${document.data().sensor_id.id}', log_interval = ${
-          document.data().log_interval
-        };
+        UPDATE  sensor_id = '${document.data().sensor_id.id}', log_interval = ${document.data().log_interval
+          };
         `;
         var result = await conn.query(sql);
         conn.end();
@@ -311,29 +323,29 @@ class LocalDB {
     });
   }
 
-  public async updateSensorConfigBySnapshot(snapshot:firebase.firestore.DocumentSnapshot):Promise<void>{
-    if(!snapshot.exists){
+  public async updateSensorConfigBySnapshot(snapshot: firebase.firestore.DocumentSnapshot): Promise<void> {
+    if (!snapshot.exists) {
       process.exit();
     }
     try {
-        const senserConfig:NodeSensorConfig = NodeSensorConfig.fromSnapshot(snapshot);
-        console.log("-> time stamp:",new Date().toLocaleString());
-        console.log("-> Update sensor config");
-        console.log(" -> id:",senserConfig.id);
-        console.log(" -> sensor_id:",senserConfig.sensorId);
-        console.log(" -> log_interval:",senserConfig.logInterval);
-        var conn = await LocalDB.pool.getConnection();
-        var sql: string = `
+      const senserConfig: NodeSensorConfig = NodeSensorConfig.fromSnapshot(snapshot);
+      console.log("-> time stamp:", new Date().toLocaleString());
+      console.log("-> Update sensor config");
+      console.log(" -> id:", senserConfig.id);
+      console.log(" -> sensor_id:", senserConfig.sensorId);
+      console.log(" -> log_interval:", senserConfig.logInterval);
+      var conn = await LocalDB.pool.getConnection();
+      var sql: string = `
         UPDATE sensor_config
         SET 
           log_interval = ${senserConfig.logInterval}
         WHERE id = '${senserConfig.id}';
         `;
-        await conn.query(sql);
-        conn.end();
-        return;
+      await conn.query(sql);
+      conn.end();
+      return;
     } catch (err) {
-      if(err.code == -1){
+      if (err.code == -1) {
         console.log(snapshot.id);
       }
     }
@@ -345,21 +357,21 @@ class LocalDB {
       .firestore()
       .collection("farm")
       .doc(farmLocalDB.id);
-    
+
     var sensors = await firebaseApp
       .firestore()
       .collection("sensor")
       .where("farm_id", "==", farmIdRef)
-      .get();    
-    const  sensorList = sensors.docs.map((document)=>{
+      .get();
+    const sensorList = sensors.docs.map((document) => {
       return document.id;
-    }); 
+    });
     var conn = await LocalDB.pool.getConnection();
     var delSQl = `DELETE FROM sensor WHERE id NOT IN (`;
-      sensorList.forEach((element)=>{
-      delSQl +=`'${element}',`;
+    sensorList.forEach((element) => {
+      delSQl += `'${element}',`;
     });
-    delSQl = delSQl.slice(0,-1);
+    delSQl = delSQl.slice(0, -1);
     delSQl += ');'
     // console.log(delSQl);
     await conn.query(delSQl);
@@ -381,21 +393,17 @@ class LocalDB {
         var sql: string = `
         INSERT INTO sensor(id, mac_address,start_date,end_date,status,type_id,value) 
         values ('${document.id}' , '${document.data().mac_address}',
-              ${start_date != null ? `'${start_date}'` : null} , ${
-          end_date != null ? `'${end_date}'` : null
-        } , '${document.data().status}' , '${document.data().type_id.id}',
+              ${start_date != null ? `'${start_date}'` : null} , ${end_date != null ? `'${end_date}'` : null
+          } , '${document.data().status}' , '${document.data().type_id.id}',
               '${document.data().value}'
               )
         ON DUPLICATE KEY 
         UPDATE   
         mac_address = '${document.data().mac_address}',
-        start_date = ${
-          start_date != null ? `'${start_date}'` : null
-        } , end_date = ${
-          end_date != null ? `'${end_date}'` : null
-        } , status = '${document.data().status}' , type_id= '${
-          document.data().type_id.id
-        }',
+        start_date = ${start_date != null ? `'${start_date}'` : null
+          } , end_date = ${end_date != null ? `'${end_date}'` : null
+          } , status = '${document.data().status}' , type_id= '${document.data().type_id.id
+          }',
         value = '${document.data().value}';
         `;
         var result = await conn.query(sql);
@@ -413,18 +421,18 @@ class LocalDB {
       .firestore()
       .collection("control_type")
       .get();
-    const   controlTypeList =  controlTypes.docs.map((document)=>{
-        return document.id;
-      }); 
-      var conn = await LocalDB.pool.getConnection();
-      var delSQl = `DELETE FROM  control_type WHERE id NOT IN (`;
-         controlTypeList.forEach((element)=>{
-        delSQl +=`'${element}',`;
-      });
-      delSQl = delSQl.slice(0,-1);
-      delSQl += ');'
-      // console.log(delSQl);
-      await conn.query(delSQl);
+    const controlTypeList = controlTypes.docs.map((document) => {
+      return document.id;
+    });
+    var conn = await LocalDB.pool.getConnection();
+    var delSQl = `DELETE FROM  control_type WHERE id NOT IN (`;
+    controlTypeList.forEach((element) => {
+      delSQl += `'${element}',`;
+    });
+    delSQl = delSQl.slice(0, -1);
+    delSQl += ');'
+    // console.log(delSQl);
+    await conn.query(delSQl);
     controlTypes.forEach(async (document) => {
       try {
         var conn = await LocalDB.pool.getConnection();
@@ -454,35 +462,33 @@ class LocalDB {
       .collection("control_config")
       .where("farm_id", "==", farmIdRef)
       .get();
-    const    controlConfigList =   controlConfigs.docs.map((document)=>{
-        return document.id;
-      }); 
-      var conn = await LocalDB.pool.getConnection();
-      var delSQl = `DELETE FROM  control_config WHERE id NOT IN (`;
-          controlConfigList.forEach((element)=>{
-        delSQl +=`'${element}',`;
-      });
-      delSQl = delSQl.slice(0,-1);
-      delSQl += ');'
-      // console.log(delSQl);
-      await conn.query(delSQl);
+    const controlConfigList = controlConfigs.docs.map((document) => {
+      return document.id;
+    });
+    var conn = await LocalDB.pool.getConnection();
+    var delSQl = `DELETE FROM  control_config WHERE id NOT IN (`;
+    controlConfigList.forEach((element) => {
+      delSQl += `'${element}',`;
+    });
+    delSQl = delSQl.slice(0, -1);
+    delSQl += ');'
+    // console.log(delSQl);
+    await conn.query(delSQl);
     controlConfigs.forEach(async (document) => {
       try {
         var conn = await LocalDB.pool.getConnection();
-        const controlConfig:NodeControlConfig = NodeControlConfig.fromSnapshot(document);
+        const controlConfig: NodeControlConfig = NodeControlConfig.fromSnapshot(document);
         var sql: string = `
-        INSERT INTO control_config(id, control_id, log_interval,cron_time,period_time,value) 
-        values ('${controlConfig.id}', '${controlConfig.controlId}' , ${
-          controlConfig.logInterval
-        },'${controlConfig.cronTime}',${controlConfig.periodTime},'${controlConfig.value}'
+        INSERT INTO control_config(id, control_id, start_cron_time , end_cron_time ,value) 
+        values ('${controlConfig.id}', '${controlConfig.controlId}' , '${controlConfig.startCronTime
+          }','${controlConfig.endCronTime}','${controlConfig.value}'
         
         )
         ON DUPLICATE KEY 
-        UPDATE  control_id = '${
-          controlConfig.controlId
-        }', log_interval = ${controlConfig.logInterval},
-        cron_time = '${controlConfig.cronTime}',
-        period_time = ${controlConfig.periodTime},
+        UPDATE  control_id = '${controlConfig.controlId
+          }',
+        start_cron_time = '${controlConfig.startCronTime}',
+        end_cron_time = '${controlConfig.endCronTime}',
         value = '${controlConfig.value}'
         ;
         `;
@@ -506,18 +512,18 @@ class LocalDB {
       .collection("control")
       .where("farm_id", "==", farmIdRef)
       .get();
-      const    controlList =   controls.docs.map((document)=>{
-        return document.id;
-      }); 
-      var conn = await LocalDB.pool.getConnection();
-      var delSQl = `DELETE FROM  control WHERE id NOT IN (`;
-          controlList.forEach((element)=>{
-        delSQl +=`'${element}',`;
-      });
-      delSQl = delSQl.slice(0,-1);
-      delSQl += ');'
-      // console.log(delSQl);
-      await conn.query(delSQl);
+    const controlList = controls.docs.map((document) => {
+      return document.id;
+    });
+    var conn = await LocalDB.pool.getConnection();
+    var delSQl = `DELETE FROM  control WHERE id NOT IN (`;
+    controlList.forEach((element) => {
+      delSQl += `'${element}',`;
+    });
+    delSQl = delSQl.slice(0, -1);
+    delSQl += ');'
+    // console.log(delSQl);
+    await conn.query(delSQl);
     controls.forEach(async (document) => {
       var start_date: any = moment(new Date(document.data().start_date * 1000));
       start_date.set("year", start_date.year() - 1969);
@@ -536,21 +542,17 @@ class LocalDB {
         var sql: string = `
         INSERT INTO control(id, mac_address,start_date,end_date,status,type_id,value) 
         values ('${document.id}', '${document.data().mac_address}',
-              ${start_date != null ? `'${start_date}'` : null} , ${
-          end_date != null ? `'${end_date}'` : null
-        } , '${document.data().status}' , '${document.data().type_id.id}',
+              ${start_date != null ? `'${start_date}'` : null} , ${end_date != null ? `'${end_date}'` : null
+          } , '${document.data().status}' , '${document.data().type_id.id}',
               '${document.data().value}'
               )
         ON DUPLICATE KEY 
         UPDATE  id = '${document.id}',  
         mac_address = '${document.data().mac_address}',
-        start_date = ${
-          start_date != null ? `'${start_date}'` : null
-        } , end_date = ${
-          end_date != null ? `'${end_date}'` : null
-        } , status = '${document.data().status}' , type_id= '${
-          document.data().type_id.id
-        }',
+        start_date = ${start_date != null ? `'${start_date}'` : null
+          } , end_date = ${end_date != null ? `'${end_date}'` : null
+          } , status = '${document.data().status}' , type_id= '${document.data().type_id.id
+          }',
         value = '${document.data().value}';
         `;
         var result = await conn.query(sql);
@@ -562,7 +564,7 @@ class LocalDB {
     });
   }
 
-  public async updateFarm():Promise<void>{
+  public async updateFarm(): Promise<void> {
     const conn = await LocalDB.pool.getConnection();
     const farmInfo = await this.getFarmInfo();
     var firebaseApp = LocalDB.remoteDB.getInstance();
@@ -571,12 +573,12 @@ class LocalDB {
       .collection("farm")
       .doc(farmInfo.id)
       .get();
-    const data = farmDocument.data();   
-    if( data != undefined){
+    const data = farmDocument.data();
+    if (data != undefined) {
       var date: any = moment(new Date(data.date * 1000));
       date.set("year", date.year() - 1969);
       date =
-          data.date != undefined
+        data.date != undefined
           ? date.format("YYYY-MM-DD HH:mm:ss")
           : null;
       var updateSql = `
@@ -591,30 +593,30 @@ class LocalDB {
       await conn.query(updateSql);
       firebaseApp.firestore().collection('farm').doc(farmInfo.id).onSnapshot(this.farmCommandHandler);
     }
-     
-    
-    conn.end();
-    return ;
-  } 
 
-  public async farmCommandHandler(snapshot:firebase.firestore.DocumentSnapshot):Promise<void>{
-    if(!snapshot.exists){
+
+    conn.end();
+    return;
+  }
+
+  public async farmCommandHandler(snapshot: firebase.firestore.DocumentSnapshot): Promise<void> {
+    if (!snapshot.exists) {
       process.exit();
     }
     const data = snapshot.data();
-    if(data != undefined){  
-      console.log("-> time stamp:",new Date().toLocaleString());
+    if (data != undefined) {
+      console.log("-> time stamp:", new Date().toLocaleString());
       console.log("-> update farm command");
-      console.log(" -> restart_commnad:",data.restart_command);
-      if(data.restart_command.status == 'waiting'){
+      console.log(" -> restart_commnad:", data.restart_command);
+      if (data.restart_command.status == 'waiting') {
         const jsonData = {
-          restart_command:{
-            status:"successed",
+          restart_command: {
+            status: "successed",
             time: firebase.firestore.Timestamp.fromDate(new Date())
           }
         };
-        await LocalDB.remoteDB.updateDocument('farm',snapshot.id,
-        JSON.parse(JSON.stringify(jsonData))
+        await LocalDB.remoteDB.updateDocument('farm', snapshot.id,
+          JSON.parse(JSON.stringify(jsonData))
         );
         process.exit();
       }
