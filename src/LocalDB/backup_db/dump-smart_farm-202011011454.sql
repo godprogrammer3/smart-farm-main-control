@@ -55,10 +55,11 @@ CREATE TABLE `control_config` (
   `id` varchar(100) NOT NULL,
   `control_id` varchar(100) DEFAULT NULL,
   `log_interval` int(11) DEFAULT NULL,
-  `toggle_interval` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`toggle_interval`)),
   `cron_time` varchar(100) DEFAULT NULL,
   `value` varchar(100) DEFAULT NULL,
   `period_time` int(11) DEFAULT NULL,
+  `start_cron_time` varchar(100) DEFAULT NULL,
+  `end_cron_time` varchar(100) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -69,7 +70,7 @@ CREATE TABLE `control_config` (
 
 LOCK TABLES `control_config` WRITE;
 /*!40000 ALTER TABLE `control_config` DISABLE KEYS */;
-INSERT INTO `control_config` VALUES ('dK96QYxOgIMrJS5lbrgo','cI7oo4PmMo1sfuAdV13X',5,NULL,'0 49 2 * * 1','1',10);
+INSERT INTO `control_config` VALUES ('dK96QYxOgIMrJS5lbrgo','cI7oo4PmMo1sfuAdV13X',5,'0 49 2 * * 1','1',10,NULL,NULL);
 /*!40000 ALTER TABLE `control_config` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -267,4 +268,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2020-10-26  8:21:18
+-- Dump completed on 2020-11-01 14:54:49
