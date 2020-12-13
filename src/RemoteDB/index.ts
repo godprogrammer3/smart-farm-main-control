@@ -1,18 +1,11 @@
 import firebase from "firebase/app";
 import "firebase/firestore";
 import { singleton } from "tsyringe";
+import firebaseConfig from "./firebase-config.json";
 
 @singleton()
 class RemoteDB {
-  private static readonly FIREBASE_CONFIG = {
-    apiKey: "AIzaSyBHEHHC5wfXZakJKFvLlPT_625zQP0iUe8",
-    authDomain: "dev-strawberry-74279.firebaseapp.com",
-    databaseURL: "https://dev-strawberry-74279.firebaseio.com",
-    projectId: "dev-strawberry-74279",
-    storageBucket: "dev-strawberry-74279.appspot.com",
-    messagingSenderId: "13176011539",
-    appId: "1:13176011539:web:ef721456a2a1a3e9be38e6",
-  };
+  private static readonly FIREBASE_CONFIG = firebaseConfig;
   private static app: firebase.app.App;
   constructor() {
     if (!firebase.apps.length) {
